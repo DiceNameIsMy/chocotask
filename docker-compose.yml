@@ -11,14 +11,38 @@ services:
       - ./.env.dev
     depends_on:
       - db
+  celery-worker:
+    build:
+      dockerfile: Dockerfile.celery
+      context: ./project
+    command: celery -A config worker -l info
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+  celery-beat:
+    build:
+      dockerfile: Dockerfile.celery
+      context: ./project
+    command: celery -A config beat -l info
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
   db:
     image: postgres:13-alpine
+    expose:
+      - 5432
     volumes:
       - pg-data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
       - POSTGRES_DB=database
+  redis:
+    image: redis:6-alpine
+    expose:
+      - 6379
 
 volumes:
   pg-data:

@@ -26,3 +26,7 @@ class Todo(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # If was not notified yet and has deadline in 
+    # an hour, send notification
+    notified = models.BooleanField(default=False)

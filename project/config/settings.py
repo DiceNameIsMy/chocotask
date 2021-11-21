@@ -5,9 +5,9 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "DEV_SECRET_KEY")
+SECRET_KEY = os.environ.get('SECRET_KEY', 'DEV_SECRET_KEY')
 
-DEBUG = int(os.environ.get("DEBUG", default=1))
+DEBUG = int(os.environ.get('DEBUG', default=1))
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
@@ -24,6 +24,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
+
+    'django_celery_beat',
 
     'corsheaders',
 
@@ -65,13 +67,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("SQL_USER", "user"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "pass"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
-        "PORT": os.environ.get("SQL_PORT", "5432"),
+    'default': {
+        'ENGINE': os.environ.get('SQL_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get('SQL_DATABASE', BASE_DIR / 'db.sqlite3'),
+        'USER': os.environ.get('SQL_USER', 'user'),
+        'PASSWORD': os.environ.get('SQL_PASSWORD', 'pass'),
+        'HOST': os.environ.get('SQL_HOST', 'localhost'),
+        'PORT': os.environ.get('SQL_PORT', '5432'),
     }
 }
 
@@ -120,11 +122,35 @@ REST_FRAMEWORK = {
 
 TOKEN_EXPIRATION = timedelta(days=7)
 
+# Notify author of Todo about due_date ahead of given timedelta
+TODO_EMAIL_DEADLINE_AHEAD = timedelta(hours=1)
+
+# Celery broker
+BROKER_NAME = os.environ.get('BROKER_NAME', 'redis')
+BROKER_HOST = os.environ.get('BROKER_HOST', '127.0.0.1')
+BROKER_PORT = os.environ.get('BROKER_PORT', '6379')
+
+# Celery
+CELERY_BROKER_URL = f'{BROKER_NAME}://{BROKER_HOST}:{BROKER_PORT}'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'send_notification_on_near_deadline': {
+        'task': 'apps.todos.tasks.send_deadline_notifications',
+        'schedule': timedelta(hours=1),
+    }
+}
+
+# Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = os.environ.get("EMAIL_PORT", 587)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
