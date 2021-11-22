@@ -141,7 +141,7 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_SCHEDULE = {
     'send_notification_on_near_deadline': {
         'task': 'apps.todos.tasks.send_deadline_notifications',
-        'schedule': timedelta(hours=1),
+        'schedule': timedelta(minutes=5),
     }
 }
 
