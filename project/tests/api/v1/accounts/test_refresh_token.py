@@ -16,11 +16,9 @@ def refresh_token(api_client: APIClient, token_key: str = ''):
 
 
 @pytest.mark.django_db
-def test_refresh_token(api_client: APIClient, create_user, create_token):
-    user = create_user()
-    token = create_token(user)
-
-    request = refresh_token(api_client=api_client, token_key=token.key)
+def test_refresh_token(api_client: APIClient, user_guest, authenticate):
+    authenticate(api_client, user_guest)
+    request = refresh_token(api_client=api_client)
 
     assert request.status_code == 201
 
@@ -30,6 +28,7 @@ def test_refresh_token_not_valid(api_client: APIClient):
     request = refresh_token(api_client=api_client, token_key='a' * 40)
 
     assert request.status_code == 401
+
 
 @pytest.mark.django_db
 def test_refresh_token_no_token(api_client: APIClient):
