@@ -1,11 +1,14 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 
 from apps.accounts.permissions import IsEmployeeOrReadOnly
 from apps.todos.models import Todo
-from apps.utils.permissions import IsRelated
+from apps.utils.permissions import IsRelatedOrAdmin
 
 from .serializers import TodoSerializer
+
+
+SAFE_ACTIONS = ['list', 'retrieve']
 
 
 class TodoViewSet(ModelViewSet):
@@ -16,16 +19,14 @@ class TodoViewSet(ModelViewSet):
     Updating and deleting allowed for Todo author and admin users
     """
 
-    permission_classes = [IsAuthenticated]
-    user_field = 'author'  # for `IsRelated` Permission class
-
     queryset = Todo.objects.prefetch_related('author').all()
     serializer_class = TodoSerializer
 
-    def get_permissions(self):
-        if self.action in SAFE_METHODS or self.action == 'create':
-            self.permission_classes.append(IsEmployeeOrReadOnly)
-        else:
-            self.permission_classes.append(IsRelated)
+    @property
+    def permission_classes(self):
+        permissions = [IsAuthenticated, IsEmployeeOrReadOnly]
+        if self.action not in SAFE_ACTIONS:
+            permissions.append(IsRelatedOrAdmin)
+        return permissions
 
-        return super().get_permissions()
+    user_field = 'author'  # for `IsRelatedOrAdmin` Permission class

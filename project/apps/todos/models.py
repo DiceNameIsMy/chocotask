@@ -30,3 +30,6 @@ class Todo(models.Model):
     # If was not notified yet and has deadline in 
     # an hour, send notification
     notified = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return self.title[:45]
